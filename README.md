@@ -41,9 +41,9 @@ cd CommentToxicity
 pip install -r requirements.txt
 ```
 
-### 3. Download the dataset
+### 3. Download the Dataset
 
-Download `train.csv` and `test.csv` from the [Jigsaw Toxic Comment Classification Challenge](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge/data) and place them in the project root.
+Download `train.csv` and `test.csv`. However you can find the dataset here -[Jigsaw Toxic Comment Classification Challenge](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge/data) and place them in the project root.
 
 ### 4. Train the model
 
@@ -70,7 +70,6 @@ The app will open at `http://localhost:8501`.
 CommentToxicity/
 ├── train.csv                 # Training dataset
 ├── test.csv                  # Test dataset
-├── train_model.py            # Model training script
 ├── app.py                    # Streamlit web application
 ├── comment_toxicity.ipynb    # Jupyter notebook (EDA & experiments)
 ├── requirements.txt          # Python dependencies
