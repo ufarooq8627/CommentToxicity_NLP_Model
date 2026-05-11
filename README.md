@@ -1,5 +1,7 @@
 # 🛡️ Comment Toxicity Detection with Deep Learning
 
+**🔴 Live Demo:** [https://commenttoxicitynlpmodel.streamlit.app/](https://commenttoxicitynlpmodel.streamlit.app/)
+
 A real-time comment toxicity detection system powered by a **Bidirectional LSTM** deep learning model, deployed as an interactive **Streamlit** web application.
 
 ## 📋 Project Overview
