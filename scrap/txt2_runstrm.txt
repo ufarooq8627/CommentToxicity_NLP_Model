@@ -1,0 +1,11 @@
+C:\Users\FAROOQUE\anaconda3\envs\tenflw_311\python.exe -m streamlit run D:\Movies\Guvi_2\CommentToxicity\app.py
+
+
+
+conda activate tenflw_311
+
+
+python --version - should show 3.11.15(if not then its a problem and activate this one)
+
+
+streamlit run app.py

@@ -1,0 +1,16 @@
+# Large dataset files (download from Kaggle instead)
+train.csv
+test.csv
+
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Draft files
+draft.ipynb
+sdfgh.txt

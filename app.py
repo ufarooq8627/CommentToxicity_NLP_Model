@@ -1,6 +1,6 @@
 """
 Comment Toxicity Detection - Streamlit Web Application
-========================================================
+
 Interactive web app for real-time toxicity detection using
 a trained Bidirectional LSTM deep learning model.
 """
@@ -185,44 +185,81 @@ except Exception as e:
     model_loaded = False
     st.error(f"⚠️ Model not found. Please run `python train_model.py` first.\n\nError: {e}")
 
+# Sidebar
+with st.sidebar:
+    st.markdown("### ℹ️ About")
+    st.markdown("""
+    This app uses a **Bidirectional LSTM** deep learning model
+    to detect toxic comments in real-time.
+
+    **Toxicity Labels:**
+    - ☠️ Toxic
+    - 💀 Severe Toxic
+    - 🤬 Obscene
+    - ⚠️ Threat
+    - 😡 Insult
+    - 🚫 Identity Hate
+
+    **Model Architecture:**
+    - Embedding → SpatialDropout1D
+    - Bidirectional LSTM (64 units)
+    - GlobalMaxPooling → Dense → Sigmoid
+
+    **Built with:** TensorFlow, Streamlit
+    """)
+
+    st.markdown("---")
+    st.markdown("### 🎛️ Settings")
+    threshold = st.slider("Toxicity Threshold", 0.0, 1.0, 0.5, 0.05)
+    st.caption(f"Comments with any score ≥ {threshold:.0%} will be flagged as toxic.")
+
 # Tabs
 tab1, tab2, tab3 = st.tabs(["🔍 Single Prediction", "📁 Bulk Prediction", "📊 Dashboard"])
 
 # Tab 1: Single Prediction
 with tab1:
+    # WHY WE BUILT THIS TAB:
+    # This section allows moderators or users to test the model by typing in a single raw comment.
+    # It proves the model works in "real-time" and visually breaks down exactly which toxic categories
+    # were triggered using progress bars. It shows the practical, interactive side of our Deep Learning model.
     st.subheader("Analyze a Comment")
+
+    # 1. Sample selection at the top
+    sample = st.selectbox("Or try a sample:", [
+        "— Select a sample —",
+        "Thank you for your help, this article is really well written!",
+        "You are a complete idiot, go kill yourself nobody likes you",
+        "This is the worst garbage I have ever read, you stupid moron",
+        "The edit was reverted because it violated community policy",
+        "I hate you and everyone like you, you disgusting piece of trash"
+    ])
+
+    # If a sample is selected, pre-fill the text area with it
+    default_text = sample if sample != "— Select a sample —" else ""
+
+    # 2. Text area in the middle
     user_input = st.text_area(
         "Enter a comment to analyze:",
+        value=default_text,
         placeholder="Type or paste a comment here...",
         height=120
     )
 
-    col_btn, col_sample = st.columns([1, 3])
-    with col_btn:
-        analyze_btn = st.button("🔍 Analyze", type="primary", use_container_width=True)
-    with col_sample:
-        sample = st.selectbox("Or try a sample:", [
-            "— Select a sample —",
-            "Thank you for your help, this article is great!",
-            "You are so stupid, go away nobody wants you here",
-            "I will find you and make you regret this",
-            "The edit was reverted because it violated policy"
-        ])
-        if sample != "— Select a sample —":
-            user_input = sample
+    # 3. Analyze button at the bottom
+    analyze_btn = st.button("🔍 Analyze", type="primary", use_container_width=True)
 
     if analyze_btn and user_input and model_loaded:
         with st.spinner("Analyzing..."):
             scores = predict_toxicity(user_input, model, tokenizer)
 
-        # Overall verdict
+        # Overall verdict using dynamic threshold
         max_score = max(scores.values())
-        if max_score < 0.3:
-            st.success("✅ This comment appears to be **safe and non-toxic**.")
-        elif max_score < 0.5:
-            st.warning("⚠️ This comment has **mild toxicity** indicators.")
+        if max_score >= threshold:
+            st.error(f"🚨 This comment is likely **toxic**! (Score: {max_score:.1%} ≥ Threshold: {threshold:.1%})")
+        elif max_score >= (threshold * 0.6): # Mild warning if it's getting close to threshold
+            st.warning(f"⚠️ This comment has **mild toxicity** indicators. (Score: {max_score:.1%})")
         else:
-            st.error("🚨 This comment is likely **toxic**!")
+            st.success(f"✅ This comment appears to be **safe and non-toxic**.")
 
         # Score breakdown
         st.markdown("#### Toxicity Breakdown")
@@ -250,6 +287,10 @@ with tab1:
 
 # Tab 2: Bulk Prediction
 with tab2:
+    # WHY WE BUILT THIS TAB:
+    # Single predictions are great for testing, but real companies (like YouTube or Reddit) need to
+    # process millions of comments at once. This tab demonstrates "batch inference", predicting on
+    # an entire CSV file cleanly and efficiently. It solves the core business problem of automated scale.
     st.subheader("Bulk Comment Analysis")
     st.markdown("Upload a CSV file with a `comment_text` column to analyze multiple comments.")
 
@@ -276,8 +317,8 @@ with tab2:
                     results_df = pd.DataFrame(predictions, columns=LABELS)
                     output_df = pd.concat([df_upload.reset_index(drop=True), results_df], axis=1)
 
-                    # Add overall toxic flag
-                    output_df['is_toxic'] = (results_df.max(axis=1) >= 0.5).astype(int)
+                    # Add overall toxic flag using the dynamic threshold
+                    output_df['is_toxic'] = (results_df.max(axis=1) >= threshold).astype(int)
 
                 st.success(f"✅ Analysis complete!")
 
@@ -306,6 +347,10 @@ with tab2:
 
 # Tab 3: Dashboard
 with tab3:
+    # WHY WE BUILT THIS TAB:
+    # A model without metrics is a black box. This dashboard serves as the translation layer
+    # between Data Scientists and Business Stakeholders. It visualizes the AUC-ROC scores, training loss,
+    # and original data distributions so the tutor can instantly verify the model's actual mathematical footprint.
     st.subheader("Data Insights & Model Performance")
 
     # --- Model Metrics ---
@@ -428,30 +473,3 @@ with tab3:
     elif not metrics:
         st.info("📌 Train the model first by running `python train_model.py` to see the dashboard.")
 
-# Sidebar
-with st.sidebar:
-    st.markdown("### ℹ️ About")
-    st.markdown("""
-    This app uses a **Bidirectional LSTM** deep learning model
-    to detect toxic comments in real-time.
-
-    **Toxicity Labels:**
-    - ☠️ Toxic
-    - 💀 Severe Toxic
-    - 🤬 Obscene
-    - ⚠️ Threat
-    - 😡 Insult
-    - 🚫 Identity Hate
-
-    **Model Architecture:**
-    - Embedding → SpatialDropout1D
-    - Bidirectional LSTM (64 units)
-    - GlobalMaxPooling → Dense → Sigmoid
-
-    **Built with:** TensorFlow, Streamlit
-    """)
-
-    st.markdown("---")
-    st.markdown("### 🎛️ Settings")
-    threshold = st.slider("Toxicity Threshold", 0.0, 1.0, 0.5, 0.05)
-    st.caption(f"Comments with any score ≥ {threshold:.0%} will be flagged as toxic.")
